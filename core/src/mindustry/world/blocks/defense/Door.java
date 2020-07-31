@@ -1,19 +1,17 @@
 package mindustry.world.blocks.defense;
 
-import arc.*;
-import mindustry.annotations.Annotations.*;
 import arc.Graphics.*;
 import arc.Graphics.Cursor.*;
 import arc.graphics.g2d.*;
 import arc.math.geom.*;
+import arc.struct.*;
+import arc.util.*;
+import arc.util.io.*;
+import mindustry.annotations.Annotations.*;
 import mindustry.content.*;
 import mindustry.entities.*;
-import mindustry.entities.Effects.*;
-import mindustry.entities.type.*;
+import mindustry.entities.units.*;
 import mindustry.gen.*;
-import mindustry.world.*;
-
-import java.io.*;
 
 import static mindustry.Vars.*;
 
@@ -23,86 +21,111 @@ public class Door extends Wall{
     public final int timerToggle = timers++;
     public Effect openfx = Fx.dooropen;
     public Effect closefx = Fx.doorclose;
-
-    protected TextureRegion openRegion;
+    public @Load("@-open") TextureRegion openRegion;
 
     public Door(String name){
         super(name);
         solid = false;
         solidifes = true;
         consumesTap = true;
-        entityType = DoorEntity::new;
-    }
 
-    @Remote(called = Loc.server)
-    public static void onDoorToggle(Player player, Tile tile, boolean open){
-        DoorEntity entity = tile.ent();
-        if(entity != null){
-            entity.open = open;
-            Door door = (Door)tile.block();
+        config(Boolean.class, (DoorEntity base, Boolean open) -> {
+            Sounds.door.at(base);
 
-            pathfinder.updateTile(tile);
-            if(!entity.open){
-                Effects.effect(door.openfx, tile.drawx(), tile.drawy());
-            }else{
-                Effects.effect(door.closefx, tile.drawx(), tile.drawy());
+            for(DoorEntity entity : base.chained){
+                entity.open = open;
+                pathfinder.updateTile(entity.tile());
+                entity.effect();
             }
-            Sounds.door.at(tile);
-        }
+        });
     }
 
     @Override
-    public void load(){
-        super.load();
-        openRegion = Core.atlas.find(name + "-open");
+    public TextureRegion getRequestRegion(BuildPlan req, Eachable<BuildPlan> list){
+        return req.config == Boolean.TRUE ? openRegion : region;
     }
 
-    @Override
-    public void draw(Tile tile){
-        DoorEntity entity = tile.ent();
-
-        if(!entity.open){
-            Draw.rect(region, tile.drawx(), tile.drawy());
-        }else{
-            Draw.rect(openRegion, tile.drawx(), tile.drawy());
-        }
-    }
-
-    @Override
-    public Cursor getCursor(Tile tile){
-        return SystemCursor.hand;
-    }
-
-    @Override
-    public boolean isSolidFor(Tile tile){
-        DoorEntity entity = tile.ent();
-        return !entity.open;
-    }
-
-    @Override
-    public void tapped(Tile tile, Player player){
-        DoorEntity entity = tile.ent();
-
-        if((Units.anyEntities(tile) && entity.open) || !tile.entity.timer.get(timerToggle, 30f)){
-            return;
-        }
-
-        Call.onDoorToggle(null, tile, !entity.open);
-    }
-
-    public class DoorEntity extends TileEntity{
+    public class DoorEntity extends Building{
         public boolean open = false;
+        public ObjectSet<DoorEntity> chained = new ObjectSet<>();
 
         @Override
-        public void write(DataOutput stream) throws IOException{
-            super.write(stream);
-            stream.writeBoolean(open);
+        public void onProximityAdded(){
+            super.onProximityAdded();
+            updateChained();
         }
 
         @Override
-        public void read(DataInput stream, byte revision) throws IOException{
-            super.read(stream, revision);
-            open = stream.readBoolean();
+        public void onProximityRemoved(){
+            super.onProximityRemoved();
+
+            for(Building b : proximity){
+                if(b instanceof DoorEntity){
+                    ((DoorEntity)b).updateChained();
+                }
+            }
+        }
+
+        public void effect(){
+            (open ? closefx : openfx).at(this);
+        }
+
+        public void updateChained(){
+            chained = new ObjectSet<>();
+            flow(chained);
+        }
+
+        public void flow(ObjectSet<DoorEntity> set){
+            if(!set.add(this)) return;
+
+            this.chained = set;
+
+            for(Building b : proximity){
+                if(b instanceof DoorEntity){
+                    ((DoorEntity)b).flow(set);
+                }
+            }
+        }
+
+        @Override
+        public void draw(){
+            Draw.rect(open ? openRegion : region, x, y);
+        }
+
+        @Override
+        public Cursor getCursor(){
+            return SystemCursor.hand;
+        }
+
+        @Override
+        public boolean checkSolid(){
+            return !open;
+        }
+
+        @Override
+        public void tapped(Player player){
+            if((Units.anyEntities(tile) && open) || !timer(timerToggle, 30f)){
+                return;
+            }
+
+            configure(!open);
+        }
+
+        @Override
+        public Boolean config(){
+            return open;
+        }
+
+        @Override
+        public void write(Writes write){
+            super.write(write);
+            write.bool(open);
+        }
+
+        @Override
+        public void read(Reads read, byte revision){
+            super.read(read, revision);
+            open = read.bool();
         }
     }
 

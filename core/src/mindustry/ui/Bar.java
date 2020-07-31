@@ -83,15 +83,15 @@ public class Bar extends Element{
         if(topWidth > Core.atlas.find("bar-top").getWidth()){
             top.draw(x, y, topWidth, height);
         }else{
-            if(ScissorStack.pushScissors(scissor.set(x, y, topWidth, height))){
+            if(ScissorStack.push(scissor.set(x, y, topWidth, height))){
                 top.draw(x, y, Core.atlas.find("bar-top").getWidth(), height);
-                ScissorStack.popScissors();
+                ScissorStack.pop();
             }
         }
 
         Draw.color();
 
-        BitmapFont font = Fonts.outline;
+        Font font = Fonts.outline;
         GlyphLayout lay = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
         lay.setText(font, name);
 

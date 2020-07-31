@@ -1,96 +1,95 @@
 package mindustry.game;
 
 import arc.*;
+import arc.scene.ui.layout.*;
 import arc.util.ArcAnnotate.*;
+import mindustry.ctype.*;
 import mindustry.type.*;
-import mindustry.world.*;
 
 /** Holds objective classes. */
 public class Objectives{
 
-    //TODO
-    public static class Wave implements Objective{
+    public static class Research implements Objective{
+        public @NonNull UnlockableContent content;
+
+        public Research(UnlockableContent content){
+            this.content = content;
+        }
+
+        protected Research(){}
+
+        @Override
+        public boolean complete(){
+            return content.unlocked();
+        }
+
+        @Override
+        public String display(){
+            return Core.bundle.format("requirement.research", content.emoji() + " " + content.localizedName);
+        }
+    }
+
+    public static class SectorWave extends SectorObjective{
         public int wave;
 
-        public Wave(int wave){
+        public SectorWave(SectorPreset zone, int wave){
+            this.preset = zone;
             this.wave = wave;
         }
 
-        protected Wave(){}
+        protected SectorWave(){}
 
         @Override
         public boolean complete(){
-            return false;
+            return preset.bestWave() >= wave;
         }
 
         @Override
         public String display(){
-            //TODO
-            return null;
+            return Core.bundle.format("requirement.wave", wave, preset.localizedName);
         }
     }
 
-    public static class Unlock implements Objective{
-        public @NonNull Block block;
+    public static class Launched extends SectorObjective{
 
-        public Unlock(Block block){
-            this.block = block;
-        }
-
-        protected Unlock(){}
-
-        @Override
-        public boolean complete(){
-            return block.unlocked();
-        }
-
-        @Override
-        public String display(){
-            return Core.bundle.format("requirement.unlock", block.localizedName);
-        }
-    }
-
-    public static class ZoneWave extends ZoneObjective{
-        public int wave;
-
-        public ZoneWave(Zone zone, int wave){
-            this.zone = zone;
-            this.wave = wave;
-        }
-
-        protected ZoneWave(){}
-
-        @Override
-        public boolean complete(){
-            return zone.bestWave() >= wave;
-        }
-
-        @Override
-        public String display(){
-            return Core.bundle.format("requirement.wave", wave, zone.localizedName);
-        }
-    }
-
-    public static class Launched extends ZoneObjective{
-
-        public Launched(Zone zone){
-            this.zone = zone;
+        public Launched(SectorPreset zone){
+            this.preset = zone;
         }
 
         protected Launched(){}
 
         @Override
         public boolean complete(){
-            return zone.hasLaunched();
+            return preset.hasLaunched();
         }
 
         @Override
         public String display(){
-            return Core.bundle.format("requirement.core", zone.localizedName);
+            return Core.bundle.format("requirement.core", preset.localizedName);
         }
     }
 
-    public abstract static class ZoneObjective implements Objective{
-        public @NonNull Zone zone;
+    public abstract static class SectorObjective implements Objective{
+        public @NonNull SectorPreset preset;
+    }
+
+    /** Defines a specific objective for a game. */
+    public interface Objective{
+
+        /** @return whether this objective is met. */
+        boolean complete();
+
+        /** @return the string displayed when this objective is completed, in imperative form.
+         * e.g. when the objective is 'complete 10 waves', this would display "complete 10 waves". */
+        String display();
+
+        /** Build a display for this zone requirement.*/
+        default void build(Table table){
+
+        }
+
+        default SectorPreset zone(){
+            return this instanceof SectorObjective ? ((SectorObjective)this).preset : null;
+        }
     }
 }

@@ -1,13 +1,13 @@
 package mindustry.ui.dialogs;
 
 import arc.*;
-import arc.struct.*;
 import arc.files.*;
 import arc.func.*;
 import arc.graphics.g2d.*;
 import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
+import arc.struct.*;
 import arc.util.*;
 import arc.util.pooling.*;
 import mindustry.gen.*;
@@ -15,9 +15,7 @@ import mindustry.ui.*;
 
 import java.util.*;
 
-import static mindustry.Vars.platform;
-
-public class FileChooser extends FloatingDialog{
+public class FileChooser extends BaseDialog{
     private static final Fi homeDirectory = Core.files.absolute(Core.files.getExternalStoragePath());
     private static Fi lastDirectory = homeDirectory;
 
@@ -56,7 +54,7 @@ public class FileChooser extends FloatingDialog{
 
         filefield = new TextField();
         filefield.setOnlyFontChars(false);
-        if(!open) platform.addDialog(filefield);
+        if(!open) filefield.addInputDialog();
         filefield.setDisabled(open);
 
         ok = new TextButton(open ? "$load" : "$save");
@@ -78,7 +76,7 @@ public class FileChooser extends FloatingDialog{
         cancel.clicked(this::hide);
 
         navigation = new TextField("");
-        navigation.touchable(Touchable.disabled);
+        navigation.touchable = Touchable.disabled;
 
         files = new Table();
         files.marginRight(10);
@@ -200,7 +198,6 @@ public class FileChooser extends FloatingDialog{
         files.add(upbutton).align(Align.topLeft).fillX().expandX().height(50).pad(2).colspan(2);
         files.row();
 
-
         ButtonGroup<TextButton> group = new ButtonGroup<>();
         group.setMinCheckCount(0);
 
@@ -255,7 +252,7 @@ public class FileChooser extends FloatingDialog{
     }
 
     public class FileHistory{
-        private Array<Fi> history = new Array<>();
+        private Seq<Fi> history = new Seq<>();
         private int index;
 
         public FileHistory(){

@@ -1,19 +1,19 @@
 package mindustry.tools;
 
+import arc.func.*;
 import arc.graphics.Color;
-import arc.graphics.g2d.TextureRegion;
-import arc.util.Structs;
-import mindustry.tools.ImagePacker.GenRegion;
+import arc.graphics.g2d.*;
+import arc.struct.*;
+import arc.util.*;
+import mindustry.tools.ImagePacker.*;
 
-import javax.imageio.ImageIO;
+import javax.imageio.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.awt.image.*;
+import java.io.*;
 
 class Image{
-    private static ArrayList<Image> toDispose = new ArrayList<>();
+    private static Seq<Image> toDispose = new Seq<>();
 
     private BufferedImage image;
     private Graphics2D graphics;
@@ -39,6 +39,12 @@ class Image{
         this(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
     }
 
+    Image copy(){
+        Image out =new Image(width, height);
+        out.draw(this);
+        return out;
+    }
+
     boolean isEmpty(int x, int y){
         if(!Structs.inBounds(x, y, width, height)){
             return true;
@@ -50,14 +56,23 @@ class Image{
     Color getColor(int x, int y){
         if(!Structs.inBounds(x, y, width, height)) return color.set(0, 0, 0, 0);
         int i = image.getRGB(x, y);
-        Color.argb8888ToColor(color, i);
+        color.argb8888(i);
         return color;
+    }
+
+    void each(Intc2 cons){
+        for(int x = 0; x < width; x++){
+            for(int y = 0; y < height; y++){
+                cons.get(x, y);
+            }
+        }
     }
 
     void draw(int x, int y, Color color){
         graphics.setColor(new java.awt.Color(color.r, color.g, color.b, color.a));
         graphics.fillRect(x, y, 1, 1);
     }
+
 
     /** Draws a region at the top left corner. */
     void draw(TextureRegion region){
@@ -125,7 +140,7 @@ class Image{
     }
 
     static int total(){
-        return toDispose.size();
+        return toDispose.size;
     }
 
     static void dispose(){

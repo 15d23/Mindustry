@@ -15,7 +15,7 @@ public class Minimap extends Table{
     public Minimap(){
         background(Tex.pane);
         float margin = 5f;
-        touchable(Touchable.enabled);
+        this.touchable = Touchable.enabled;
 
         add(new Element(){
             {
@@ -32,12 +32,15 @@ public class Minimap extends Table{
             @Override
             public void draw(){
                 if(renderer.minimap.getRegion() == null) return;
+                if(!clipBegin()) return;
 
                 Draw.rect(renderer.minimap.getRegion(), x + width / 2f, y + height / 2f, width, height);
 
                 if(renderer.minimap.getTexture() != null){
                     renderer.minimap.drawEntities(x, y, width, height, 0.75f, false);
                 }
+
+                clipEnd();
             }
         }).size(140f);
 

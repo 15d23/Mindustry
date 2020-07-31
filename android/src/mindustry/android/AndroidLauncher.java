@@ -24,6 +24,7 @@ import mindustry.ui.dialogs.*;
 
 import java.io.*;
 import java.lang.System;
+import java.lang.Thread.*;
 import java.util.*;
 
 import static mindustry.Vars.*;
@@ -37,6 +38,20 @@ public class AndroidLauncher extends AndroidApplication{
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
+        UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
+            CrashSender.log(error);
+
+            //try to forward exception to system handler
+            if(handler != null){
+                handler.uncaughtException(thread, error);
+            }else{
+                error.printStackTrace();
+                System.exit(1);
+            }
+        });
+
         super.onCreate(savedInstanceState);
         if(doubleScaleTablets && isTablet(this.getContext())){
             Scl.setAddition(0.5f);
@@ -68,7 +83,7 @@ public class AndroidLauncher extends AndroidApplication{
             }
 
             @Override
-            public org.mozilla.javascript.Context getScriptContext(){
+            public rhino.Context getScriptContext(){
                 return AndroidRhinoContext.enter(getContext().getCacheDir());
             }
 
@@ -144,9 +159,8 @@ public class AndroidLauncher extends AndroidApplication{
 
         }, new AndroidApplicationConfiguration(){{
             useImmersiveMode = true;
-            depth = 0;
             hideStatusBar = true;
-            errorHandler = CrashSender::log;
+            stencil = 8;
         }});
         checkFiles(getIntent());
 
