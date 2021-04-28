@@ -22,11 +22,13 @@ public class ThermalGenerator extends PowerGenerator{
     public void setStats(){
         super.setStats();
 
-        stats.add(BlockStat.tiles, attribute);
+        stats.add(Stat.tiles, attribute, floating);
     }
 
     @Override
     public void drawPlace(int x, int y, int rotation, boolean valid){
+        super.drawPlace(x, y, rotation, valid);
+
         drawPlaceText(Core.bundle.formatFloat("bar.efficiency", sumAttribute(attribute, x, y) * 100, 1), x, y, valid);
     }
 
@@ -36,7 +38,7 @@ public class ThermalGenerator extends PowerGenerator{
         return tile.getLinkedTilesAs(this, tempTiles).sumf(other -> other.floor().attributes.get(attribute)) > 0.01f;
     }
 
-    public class ThermalGeneratorEntity extends GeneratorEntity{
+    public class ThermalGeneratorBuild extends GeneratorBuild{
         public float sum;
 
         @Override

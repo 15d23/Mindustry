@@ -2,11 +2,11 @@ package mindustry.world.blocks;
 
 import arc.util.serialization.*;
 import arc.util.serialization.Json.*;
-import mindustry.world.meta.Attribute;
+import mindustry.world.meta.*;
 
 import java.util.*;
 
-public class Attributes implements Serializable{
+public class Attributes implements JsonSerializable{
     private final float[] arr = new float[Attribute.all.length];
 
     public void clear(){

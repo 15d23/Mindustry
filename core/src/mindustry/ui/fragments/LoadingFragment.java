@@ -1,7 +1,9 @@
 package mindustry.ui.fragments;
 
+import arc.*;
 import arc.func.*;
 import arc.graphics.*;
+import arc.graphics.g2d.*;
 import arc.scene.*;
 import arc.scene.actions.*;
 import arc.scene.event.*;
@@ -18,22 +20,27 @@ public class LoadingFragment extends Fragment{
 
     @Override
     public void build(Group parent){
-        parent.fill(Styles.black8, t -> {
+        parent.fill(t -> {
+            //rect must fill screen completely.
+            t.rect((x, y, w, h) -> {
+                Draw.alpha(t.color.a);
+                Styles.black8.draw(0, 0, Core.graphics.getWidth(), Core.graphics.getHeight());
+            });
             t.visible = false;
             t.touchable = Touchable.enabled;
             t.add().height(133f).row();
             t.add(new WarningBar()).growX().height(24f);
             t.row();
-            nameLabel = t.add("$loading").pad(10f).style(Styles.techLabel).get();
+            nameLabel = t.add("@loading").pad(10f).style(Styles.techLabel).get();
             t.row();
             t.add(new WarningBar()).growX().height(24f);
             t.row();
 
-            text("$loading");
+            text("@loading");
 
             bar = t.add(new Bar()).pad(3).size(500f, 40f).visible(false).get();
             t.row();
-            button = t.button("$cancel", () -> {}).pad(20).size(250f, 70f).visible(false).get();
+            button = t.button("@cancel", () -> {}).pad(20).size(250f, 70f).visible(false).get();
             table = t;
         });
     }
@@ -56,7 +63,7 @@ public class LoadingFragment extends Fragment{
     }
 
     public void show(){
-        show("$loading");
+        show("@loading");
     }
 
     public void show(String text){
